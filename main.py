@@ -4,22 +4,22 @@ from starlette.middleware.cors import CORSMiddleware
 import model
 from db import session
 from model import PostingTable, Posting
-from mangum import Mangum
+# from mangum import Mangum
 from typing import List, Optional
 from sqlalchemy import or_, and_
 from fastapi import FastAPI, HTTPException
 
 
 app = FastAPI() #앱을 생성한다
-handler=Mangum(app) #LAMBDA 배포용 MANGUM을 가져온다.
+# handler=Mangum(app) #LAMBDA 배포용 MANGUM을 가져온다.
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # ----------API 정의------------
 # @app.get("/getProducts")
