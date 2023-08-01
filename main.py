@@ -13,13 +13,13 @@ from fastapi import FastAPI, HTTPException
 app = FastAPI() #앱을 생성한다
 # handler=Mangum(app) #LAMBDA 배포용 MANGUM을 가져온다.
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ----------API 정의------------
 # @app.get("/getProducts")
@@ -28,7 +28,7 @@ app = FastAPI() #앱을 생성한다
 #     return users
 
 @app.get('/getProducts', response_model=List[Posting])
-async def read_items(keyword: Optional[str] = None, platform: Optional[str] = None,page: Optional[int] = 1, sort_by: Optional[str] = None, sort_order: Optional[str] = None):
+async def read_items(keyword: Optional[str] = None, platform: Optional[str] = None,page: Optional[int] = 1, sortby: Optional[str] = None, sortorder: Optional[str] = None):
     if keyword and platform:
         print("키워드와 플랫폼이 함께 입력됨")
         # 각각의 조건을 만들어줌
@@ -45,36 +45,42 @@ async def read_items(keyword: Optional[str] = None, platform: Optional[str] = No
         platform_condition = PostingTable.platform == platform
         postings = session.query(PostingTable).filter(platform_condition)
     else:
+
         print("키워드와 플랫폼이 모두 입력되지 않음")
-        # 모든 레코드 검색
-        postings = session.query(PostingTable).all()
+        postings = session.query(PostingTable)
 
     # 정렬 기준에 따라 결과 소팅
-    if sort_by:
-        if sort_by == "dday":
+    if sortby:
+        if sortby == "dday":
             sort_column = PostingTable.dday
-        elif sort_by == "demandCount":
+        elif sortby == "demandCount":
             sort_column = PostingTable.demandCount
-        elif sort_by == "applyCount":
+        elif sortby == "applyCount":
             sort_column = PostingTable.applyCount
         else:
             sort_column = None
 
         if sort_column:
-            if sort_order == "dsc":
+            if sortorder == "dsc":
                 postings = postings.order_by(sort_column.desc())
             else:
                 postings = postings.order_by(sort_column)
 
 
     # 페이지 당 결과 개수
-    items_per_page = 20
+    items_per_page = 40
 
     # 전체 결과 개수
-    total_items = postings.count()
+
+    try:
+        postings = postings.offset((page - 1) * items_per_page).limit(items_per_page)
+    except:
+        postings=postings[:40]
+
+
 
     # 페이지 번호에 따라 결과 제한
-    postings = postings.offset((page - 1) * items_per_page).limit(items_per_page)
+
 
     # User 모델로 변환
     return [Posting(id=posting.id, platform=posting.platform, region=posting.region,dday=posting.dday,title=posting.title,demandCount=posting.demandCount,applyCount=posting.applyCount,imageUrl=posting.imageUrl,url=posting.url,myImage=posting.myImage) for posting in postings]
